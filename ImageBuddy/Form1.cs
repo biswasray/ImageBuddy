@@ -7,13 +7,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 namespace ImageBuddy
 {
     public partial class Form1 : Form
     {
-        private Bitmap myImage;
+        private Bitmap myImage,prevImage;
         private Stream stream;
         public Form1()
         {
@@ -30,7 +31,7 @@ namespace ImageBuddy
             {
                 myImage = bitmap;
                 stream = (new StreamWriter("tempImageBuudy00.png")).BaseStream;
-                myImage.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                myImage.Save(stream, ImageFormat.Png);
                 FileInfo fileInfo = new FileInfo("tempImageBuudy00.png");
                 pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
                 pictureBox1.Image = myImage;
@@ -56,6 +57,8 @@ namespace ImageBuddy
             {
                 Bitmap b = new Bitmap(open.FileName);
                 LoadImage(b);
+                if (myImage != null)
+                    prevImage = (Bitmap)myImage.Clone();
                 label1.Text = "Name : " + open.FileName;
                 //b.Dispose();
             }
@@ -105,9 +108,72 @@ namespace ImageBuddy
             return temp;
         }
 
+        public Bitmap SetColorFilter(Bitmap bitmap,Color colorFilterType)
+        {
+            Bitmap bmap = (Bitmap)bitmap.Clone();
+            Color c;
+            for (int i = 0; i < bmap.Width; i++)
+            {
+                for (int j = 0; j < bmap.Height; j++)
+                {
+                    c = bmap.GetPixel(i, j);
+                    int nPixelR = 0;
+                    int nPixelG = 0;
+                    int nPixelB = 0;
+                    if (colorFilterType == Color.Red)
+                    {
+                        nPixelR = c.R;
+                        nPixelG = c.G - 255;
+                        nPixelB = c.B - 255;
+                    }
+                    else if (colorFilterType == Color.Green)
+                    {
+                        nPixelR = c.R - 255;
+                        nPixelG = c.G;
+                        nPixelB = c.B - 255;
+                    }
+                    else if (colorFilterType == Color.Blue)
+                    {
+                        nPixelR = c.R - 255;
+                        nPixelG = c.G - 255;
+                        nPixelB = c.B;
+                    }
+                    nPixelR = Math.Max(nPixelR, 0);
+                    nPixelR = Math.Min(255, nPixelR);
+
+                    nPixelG = Math.Max(nPixelG, 0);
+                    nPixelG = Math.Min(255, nPixelG);
+
+                    nPixelB = Math.Max(nPixelB, 0);
+                    nPixelB = Math.Min(255, nPixelB);
+
+                    bmap.SetPixel(i, j, Color.FromArgb((byte)nPixelR,
+                      (byte)nPixelG, (byte)nPixelB));
+                }
+            }
+            return bmap;
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
+            if (myImage != null)
+                prevImage = (Bitmap)myImage.Clone();
             LoadImage(ResizeImage(myImage, (int)numericUpDown1.Value, (int)numericUpDown2.Value));
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            LoadImage(SetColorFilter(prevImage, Color.Red));
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            LoadImage(SetColorFilter(prevImage, Color.Green));
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            LoadImage(SetColorFilter(prevImage, Color.Blue));
         }
     }
 }
